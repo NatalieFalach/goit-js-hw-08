@@ -1,44 +1,38 @@
 import throttle from 'lodash.throttle';
-import storage from './storage';
 
-const feedbackForm = document.querySelector('.feedback-form');
-const feedbackStateKey = 'feedback-form-state';
-let feedbackState = storage.load(feedbackStateKey);
+const form = document.querySelector('.feedback-form');
 
-if (feedbackState) {
-  const { email, message } = feedbackForm.elements;
+form.addEventListener('input', throttle(onFormInput, 500));
+form.addEventListener('submit', onFormSubmit);
 
-  email.value = feedbackState.email;
-  message.value = feedbackState.message;
+if (localStorage.getItem('feedback-form-state')) {
+  const { email: emailValue, message: messageValue } = JSON.parse(
+    localStorage.getItem('feedback-form-state')
+  );
+  const { email, message } = form.elements;
+
+  email.value = emailValue;
+  message.value = messageValue;
 }
-
-feedbackForm.addEventListener('input', throttle(onFormChange, 500));
-feedbackForm.addEventListener('submit', onFormSubmit);
 
 function onFormSubmit(e) {
   e.preventDefault();
 
-  const { email, message } = feedbackForm.elements;
+  console.log(getFeedbackObj());
 
-  if (email.value === '' && message.value === '') {
-    alert('Please fill all inputs');
-
-    return;
-  }
-
-  console.log(feedbackState);
-
-  storage.remove(feedbackStateKey);
-  feedbackForm.reset();
-  feedbackState = null;
+  localStorage.removeItem('feedback-form-state');
+  form.reset();
 }
 
-function onFormChange(e) {
-  const { email, message } = feedbackForm.elements;
-  const feedBackObject = {
+function onFormInput(e) {
+  localStorage.setItem('feedback-form-state', JSON.stringify(getFeedbackObj()));
+}
+
+function getFeedbackObj() {
+  const { email, message } = form.elements;
+
+  return {
     email: email.value,
     message: message.value,
   };
-
-  storage.save(feedbackStateKey, feedBackObject);
 }
